@@ -28,6 +28,10 @@
  #include "ir.h"
  #include "uart.h"
 
+ volatile char uart_buffer[UART_BUFFERSIZE];
+ volatile uint8_t uart_ptr;
+ volatile uint8_t uart_state;
+
 
  // ***** UART init *****
  void uart_init( void )
@@ -324,12 +328,12 @@
          uart_putdec(io_get_led_front());
          ret=2;
         } else 
-       if(buffer_cmp("RE?", 3)) // Get Rear LED status
+       if(buffer_cmp("RE?", 3)) // Get rear LED status
         {
          uart_putdec(io_get_blink());
          ret=2;
         } else 
-       if(buffer_cmp("FL?", 3)) // Get Rear LED status
+       if(buffer_cmp("FL?", 3)) // Get rear LED status
         {
          uart_putdec(io_get_flash());
          ret=2;
@@ -348,7 +352,7 @@
   }
 
 
- void uart_reset(void)
+ void uart_reset( void )
   {
    // Reset pointers
    uart_buffer[0]='\0';

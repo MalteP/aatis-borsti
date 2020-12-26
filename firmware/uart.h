@@ -45,10 +45,6 @@
 
   #define UART_BUFFERSIZE 8
 
-  volatile char uart_buffer[UART_BUFFERSIZE];
-  volatile uint8_t uart_ptr;
-  volatile uint8_t uart_state;
-
   void uart_init( void );
   void uart_putchar( char x );
   void uart_putstring( char* s );
@@ -58,6 +54,6 @@
   uint8_t hcheck( const char val );
   uint8_t buffer_hcmp( const char* cmp, uint8_t len, uint8_t* val_a, uint8_t* val_b );
   void uart_poll( uint8_t* controlmode );
-  void uart_reset(void);
+  void uart_reset( void );
 
  #endif

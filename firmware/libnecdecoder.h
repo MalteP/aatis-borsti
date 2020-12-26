@@ -1,11 +1,11 @@
 // #############################################################################
 // #              --- Infrared Remote Decoder (NEC Protocol) ---               #
 // #############################################################################
-// # libnecdecoder.h - Header: NEC IR Library                                  #
+// # libnecdecoder.c - Header: NEC IR Library                                  #
 // #############################################################################
-// #              Version: 1.1 - Compiler: AVR-GCC 4.5.3 (Linux)               #
-// #      (c) 2013 by Malte Pöggel - All rights reserved. - License: BSD       #
-// #               www.MALTEPOEGGEL.de - malte@maltepoeggel.de                 #
+// #              Version: 1.3 - Compiler: AVR-GCC 10.2.0 (Linux)              #
+// #    (c) '13-'20 by Malte Pöggel - All rights reserved. - License: BSD      #
+// #                  www.MALTEPOEGGEL.de - malte@poeggel.de                   #
 // #############################################################################
 // #   Redistribution and use in source and binary forms, with or without mo-  #
 // # dification, are permitted provided that the following conditions are met: #
@@ -19,7 +19,7 @@
 // #    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS    #
 // # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED #
 // #      TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A      #
-// #     PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT    # 
+// #     PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT    #
 // #   HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,  #
 // # SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED  #
 // #    TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,    #
@@ -31,9 +31,31 @@
 
 #ifndef LIBNECDECODER_H
  #define LIBNECDECODER_H
- 
+
  // Uncomment this to enable extended NEC protocol support.
  #define PROTOCOL_NEC_EXTENDED
+
+ // Uncomment this to use 16bit TIMER1. A preload value is used in order to act as 8 bit timer
+ //#define USE_16BIT_TIMER1
+
+ // Uncomment this to use INT1 instead of INT0
+ //#define USE_INT1
+
+ // Configure timer prescaler: 1024 (default) or 256 (might be useful for slow MCU frequencies)
+ #define TIMER_PRESCALER 256
+
+ // Calculation of timer values:
+ // Tick [ms] = 1 / (MCU frequency [kHz] / Prescaler)
+ // Overflow [ms] = Tick [ms] * 256
+ //
+ // Example for 8MHz clock:
+ // 1 / (8000kHz / 1024) = 0.128ms per timer increment
+ //
+ // For the AGC Burst just divide 9ms / 0.128ms = 70.3125 (~70) timer ticks.
+ // Min/Max values are used because remote controls are using ceramic resonators
+ // which might deviate due temperature or battery voltage changes.
+ // Remember that both timers are handled as 8 bit, so their values may not exceed 255.
+ // The timer overflow is used to detect a missing infrared signal, and also to detect if a key is still held down.
 
  // AGC Burst, 9ms typ
  #define TIME_BURST_MIN 167
@@ -58,18 +80,18 @@
  // Gap for logical 1, 1.69ms typ
  #define TIME_ONE_MIN    28
  #define TIME_ONE_MAX    38
- 
- // Definition for state machine 
+
+ // Definition for state machine
  enum ir_state_t { IR_BURST, IR_GAP, IR_ADDRESS, IR_ADDRESS_INV, IR_COMMAND, IR_COMMAND_INV };
- 
+
  // Definition for status bits
  #define IR_RECEIVED 0 // Received new command
  #define IR_KEYHOLD  1 // Key hold
  #define IR_SIGVALID 2 // Valid signal (Internal used)
- 
+
  // Timer Overflows till keyhold flag is cleared
  #define IR_HOLD_OVF 16
- 
+
  // Struct definition
  struct ir_struct
   {
@@ -84,10 +106,10 @@
   };
 
  // Global status structure
- volatile struct ir_struct ir;
+ extern volatile struct ir_struct ir;
 
  // Functions
  void ir_init( void );
  void ir_stop( void );
- 
+
 #endif
